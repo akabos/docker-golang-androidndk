@@ -1,0 +1,27 @@
+FROM golang:GO_VERSION
+
+LABEL maintainer="ml@akabos.com" \
+	  go.version="GO_VERSION" \
+	  android.ndk.version="NDK_VERSION"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get upgrade -y \
+ && apt-get install -y build-essential unzip \
+ && apt-get clean
+
+WORKDIR /opt
+
+RUN curl -O https://dl.google.com/android/repository/NDK_FILENAME \
+ && echo 'NDK_CHECKSUM' | sha1sum NDK_FILENAME \
+ && unzip -o NDK_FILENAME \
+ && rm NDK_FILENAME
+
+WORKDIR /
+
+RUN go get -u golang.org/x/mobile/cmd/gomobile \
+ && cd $GOPATH/src/golang.org/x/mobile/cmd/gomobile \
+ && git reset --hard c0beac360cc13173963df8872fe4b0f2542cb85b \
+ && go install \
+ && gomobile init -ndk /opt/NDK_DIRNAME
