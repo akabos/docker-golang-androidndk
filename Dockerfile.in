@@ -4,24 +4,23 @@ LABEL maintainer="ml@akabos.com" \
 	  go.version="GO_VERSION" \
 	  android.ndk.version="NDK_VERSION"
 
-ENV DEBIAN_FRONTEND=noninteractive
+COPY sources.list /etc/apt/
 
 RUN apt-get update \
  && apt-get upgrade -y \
- && apt-get install -y build-essential android-sdk unzip \
+ && DEBIAN_FRONTEND=noninteractive \
+ 	apt-get install -y \
+ 	build-essential google-android-platform-24-installer gradle \
  && apt-get clean
 
-WORKDIR /opt
-
-RUN curl -O https://dl.google.com/android/repository/NDK_FILENAME \
- && echo 'NDK_CHECKSUM' | sha1sum NDK_FILENAME \
+RUN cd /opt \
+ && curl -O https://dl.google.com/android/repository/NDK_FILENAME \
+ && echo NDK_CHECKSUM | sha1sum NDK_FILENAME \
  && unzip -o NDK_FILENAME \
  && rm NDK_FILENAME
 
-WORKDIR /
+ENV PATH=/opt/NDK_DIRNAME:${PATH}
+ENV ANDROID_SDK=/usr/lib/android-sdk
 
 RUN go get -u golang.org/x/mobile/cmd/gomobile \
- && cd $GOPATH/src/golang.org/x/mobile/cmd/gomobile \
- && git reset --hard c0beac360cc13173963df8872fe4b0f2542cb85b \
- && go install \
  && gomobile init -ndk /opt/NDK_DIRNAME
